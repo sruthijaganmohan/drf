@@ -1,9 +1,10 @@
-from rest_framework import generics
+from rest_framework import generics, mixins, permissions, authentication
 from .models import Product
 from .serializers import ProductSerializer
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
+from .permissions import IsStaffEditorPermission
 
 # Class based views.
 class ProductDetailAPIView(generics.RetrieveAPIView):
@@ -13,6 +14,9 @@ class ProductDetailAPIView(generics.RetrieveAPIView):
 class ProductListCreateAPIView(generics.ListCreateAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
+    authentication_classes = [authentication.SessionAuthentication]
+    permission_classes = [permissions.IsAdminUser, IsStaffEditorPermission]
+    
 
     def perform_create(self, serializer):
         # serializer.save(user=self.request.user)
@@ -30,6 +34,7 @@ class ProductListAPIView(generics.ListAPIView):
 class ProductUpdateAPIView(generics.UpdateAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
+    permission_classes = [permissions.DjangoModelPermissions]
     lookup_field = 'pk'
     
     def perform_update(self, serializer):
@@ -44,6 +49,23 @@ class ProductDestroyAPIView(generics.DestroyAPIView):
     
     def perform_destroy(self, instance):
         super().perform_destroy(instance)
+
+
+# Mixins
+# class ProductMixinView( mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.CreateModelMixin, generics.GenericAPIView):
+#     queryset = Product.objects.all()
+#     serializer_class = ProductSerializer
+#     lookup_field = 'pk'
+
+#     def get(self, request, *args, **kwargs):
+#         pk = kwargs.get("pk")
+#         if pk is not None:
+#             return self.retrieve(request, *args, **kwargs)
+#         return self.list(request, *args, **kwargs)
+    
+#     def post(self, request, *args, **kwargs):
+#         return self.create(request, *args, **kwargs)
+
 
 
 # Function based views
